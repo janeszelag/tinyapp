@@ -1,13 +1,15 @@
 const express = require('express');
 const app = express();
 const PORT = 8080; //default port is 8080
+var cookieParser = require('cookie-parser')
 
 //tells the Express app to use EJS as its templating engine
 app.set("view engine", "ejs");
 
-//to translate Buffer to human readable data
+//to translate Buffer/Cookies to human readable data
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser())
 
 //object containg all our tiny urls 
 const urlDatabase = {
@@ -36,21 +38,31 @@ app.get('/', (req, res) => {
 });
 
 
+app.post('/login', (req, res) => {
+  let value = req.body.username;
+  res.cookie('username', value);
+  console.log(value);
+  res.redirect("/urls");
+})
+
 
 //page with all of our current urls
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
   res.render("urls_index", templateVars);
 });
 
 //page with form for creating new tiny URL
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = { username: req.cookies["username"] }
+  res.render("urls_new", templateVars);
 });
+
+
 
 //a page that DISPLAYS the long and short URL including a hyperlink
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"] };
   res.render("urls_show", templateVars)
 });
 
@@ -58,7 +70,6 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   let result = generateRandomString();
   urlDatabase[result] = req.body.longURL;
-  templateVars = { shortURL: result, longURL: urlDatabase[result]}
   res.redirect( `/urls/${result}`);
 });
 
@@ -75,11 +86,13 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+//POST to update longURL
 app.post('/urls/:shortURL', (req, res) => {
   let value2 = req.params.shortURL;
   urlDatabase[value2] = req.body.longURL;
   res.redirect("/urls");
 })
 
+//POST to save username
 
 
