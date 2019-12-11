@@ -1,15 +1,18 @@
+//CONSTANTS & REQUIREMENTS
+
 const express = require('express');
 const app = express();
 const PORT = 8080; //default port is 8080
-var cookieParser = require('cookie-parser')
-
-//tells the Express app to use EJS as its templating engine
-app.set("view engine", "ejs");
-
-//to translate Buffer/Cookies to human readable data
+const cookieParser = require('cookie-parser')
 const bodyParser = require("body-parser");
+app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser())
+
+
+
+//DATA
+
 
 //object containg all our tiny urls 
 const urlDatabase = {
@@ -17,9 +20,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+
+//object containing users including an example for format info, 
 const users = { 
-  
+  "b": {
+    id: "b", 
+    email: "ucat.com", 
+    password: "dishwasher-funk"
+  }
 };
+
+
+
+//HELPER FUNCTIONS
 
 //function to generate 6 character alphanumeric string for tinyURL
 function generateRandomString() {
@@ -46,34 +59,72 @@ const findEmail = function(obj, emailToSearch, callback) {
 
 
 
+//server is listening
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
 
+
+//GETS
+
+
+//page with form for creating new tiny URL
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new", users);
+});
+
+//form to register
+app.get("/register", (req, res) => {
+  res.render("_register", users);
+});
+
+
+//page that DISPLAYS the long and short URL including a hyperlink
+app.get("/urls/:shortURL", (req, res) => {
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], users};
+  res.render("urls_show", templateVars)
+});
+
+//when hyperlink is clicked, redirects to actual longURL page
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
+});
+
+//page with all of our current urls
+app.get("/urls", (req, res) => {
+  let templateVars = { urls: urlDatabase, users};
+  res.render("urls_index", templateVars);
+});
+
+//root page - just says hello
 app.get('/', (req, res) => {
   res.send('Hello!');
 });
 
-//login in navbar
-app.post('/login', (req, res) => {
-  let value = req.body.username;
-  res.cookie('username', value);
-  console.log(value);
+
+
+//POSTS
+
+
+
+//DELETE url from urlDatabase
+app.post('/urls/:shortURL/delete', (req, res) => {
+  let value = req.params.shortURL;
+  delete urlDatabase[value];
   res.redirect("/urls");
 })
 
-//user clicks logout
-app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+
+//POST to update longURL
+app.post('/urls/:shortURL', (req, res) => {
+  let value2 = req.params.shortURL;
+  urlDatabase[value2] = req.body.longURL;
   res.redirect("/urls");
 })
 
-// "user2RandomID": {
-  //   id: "user2RandomID", 
-  //   email: "user2@example.com", 
-  //   password: "dishwasher-funk"
-  // }
+//creates a new user
 app.post('/register', (req, res) => {
   let idValue = generateRandomString();
   let userEmail = req.body.email;
@@ -89,57 +140,17 @@ app.post('/register', (req, res) => {
   res.redirect("/urls");
 })
 
-//page with all of our current urls
-app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
-  res.render("urls_index", templateVars);
-});
-
-//page with form for creating new tiny URL
-app.get("/urls/new", (req, res) => {
-  let templateVars = { username: req.cookies["username"] }
-  res.render("urls_new", templateVars);
-});
-
-app.get("/register", (req, res) => {
-  let templateVars = { username: req.cookies["username"] }
-  res.render("_register", templateVars);
-});
-
-
-//a page that DISPLAYS the long and short URL including a hyperlink
-app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"] };
-  res.render("urls_show", templateVars)
-});
-
-//CREATES a new tiny url upon input
-app.post("/urls", (req, res) => {
-  let result = generateRandomString();
-  urlDatabase[result] = req.body.longURL;
-  res.redirect( `/urls/${result}`);
-});
-
-//DELETE url from urlDatabase
-app.post('/urls/:shortURL/delete', (req, res) => {
-  let value = req.params.shortURL;
-  delete urlDatabase[value];
+//logs user in 
+app.post('/login', (req, res) => {
+  let value = req.body.username;
+  res.cookie('username', value);
+  console.log(value);
   res.redirect("/urls");
 })
 
-//when hyperlink is clicked, redirects to actual longURL page
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
-});
-
-//POST to update longURL
-app.post('/urls/:shortURL', (req, res) => {
-  let value2 = req.params.shortURL;
-  urlDatabase[value2] = req.body.longURL;
+//logs user out 
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
   res.redirect("/urls");
 })
-
-//POST to save username
-
 
