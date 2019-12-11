@@ -16,8 +16,8 @@ app.use(cookieParser());
 
 //URL OBJECTS
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 
@@ -68,7 +68,7 @@ app.listen(PORT, () => {
 //GETS
 
 //FORM for logging in
-app.get("/login", (req, res) => {
+app.get('/login', (req, res) => {
   let id = req.cookies['user_id'];
   let user = users[id];
   let templateVars = { user };
@@ -76,11 +76,15 @@ app.get("/login", (req, res) => {
 });
 
 //FORM for creating new tiny URL
-app.get("/urls/new", (req, res) => {
+app.get('/urls/new', (req, res) => {
   let id = req.cookies['user_id'];
-  let user = users[id];
-  let templateVars = { user };
-  res.render("urls_new", templateVars);
+  if (id) {
+    let user = users[id];
+    let templateVars = { user };
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect('/login')
+  }
 });
 
 //FORM to register
@@ -93,16 +97,17 @@ app.get("/register", (req, res) => {
 
 
 //page that DISPLAYS the long and short URL including a hyperlink
-app.get("/urls/:shortURL", (req, res) => {
+app.get('/urls/:shortURL', (req, res) => {
   let id = req.cookies['user_id'];
   let user = users[id];
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user};
-  res.render("urls_show", templateVars);
+  let shortURL = req.params.shortURL;
+  let templateVars = { shortURL, longURL: urlDatabase[shortURL].longURL, user};
+  res.render('urls_show', templateVars);
 });
 
 //HYPERLINK when hyperlink is clicked, redirects to actual longURL page
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -182,3 +187,10 @@ app.post('/logout', (req, res) => {
   res.redirect("/urls");
 });
 
+//CREAT tiny URL
+app.post('/urls', (req, res) => {
+  let id = req.cookies['user_id'];
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: id}
+  res.redirect(`/urls/${shortURL}`)
+});
