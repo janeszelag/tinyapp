@@ -17,6 +17,10 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = { 
+  
+};
+
 //function to generate 6 character alphanumeric string for tinyURL
 function generateRandomString() {
     var result           = '';
@@ -28,6 +32,20 @@ function generateRandomString() {
     return result;
 }
 
+//function to search for email in users object
+
+const findEmail = function(obj, emailToSearch, callback) {
+  for (let key in obj) {
+    for (let newKey in obj[key]) {
+      if (obj[key][newKey] === emailToSearch) {
+        callback()
+      }
+    }
+  }
+}
+
+
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -37,7 +55,7 @@ app.get('/', (req, res) => {
   res.send('Hello!');
 });
 
-
+//login in navbar
 app.post('/login', (req, res) => {
   let value = req.body.username;
   res.cookie('username', value);
@@ -45,8 +63,29 @@ app.post('/login', (req, res) => {
   res.redirect("/urls");
 })
 
+//user clicks logout
 app.post('/logout', (req, res) => {
   res.clearCookie('username');
+  res.redirect("/urls");
+})
+
+// "user2RandomID": {
+  //   id: "user2RandomID", 
+  //   email: "user2@example.com", 
+  //   password: "dishwasher-funk"
+  // }
+app.post('/register', (req, res) => {
+  let idValue = generateRandomString();
+  let userEmail = req.body.email;
+  let userPassword = req.body.password;
+  if (userPassword.length === 0 || userEmail.length === 0) {
+    res.status(400).send("Status Code 404: Incorrect email or password format")
+  };
+  findEmail(users, userEmail, function() {
+    res.status(400).send("Status Code 404: Sorry that email is already in use")
+  })
+  users[idValue] = {id: idValue, email: userEmail, password: userPassword}
+  res.cookie('user_id', idValue);
   res.redirect("/urls");
 })
 
@@ -62,6 +101,10 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
+app.get("/register", (req, res) => {
+  let templateVars = { username: req.cookies["username"] }
+  res.render("_register", templateVars);
+});
 
 
 //a page that DISPLAYS the long and short URL including a hyperlink
