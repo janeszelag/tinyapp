@@ -49,12 +49,10 @@ const generateRandomString = function() {
 //Searches for email in users object
 const findEmail = function(obj, emailToSearch) {
   for (let key in obj) {
-    for (let newKey in obj[key]) {
-      if (obj[key][newKey] === emailToSearch) {
+      if (obj[key].email === emailToSearch) {
         return obj[key];
       }
     }
-  }
   return false;
 };
 
@@ -167,7 +165,7 @@ app.post('/login', (req, res) => {
   let userObject  = findEmail(users, userEmail);
   if (userObject) {
     if (userPassword === userObject.password) {
-      let id = userObject.password;
+      let id = userObject.id;
       res.cookie('user_id', id);
       res.redirect("/urls");
     } else  {
