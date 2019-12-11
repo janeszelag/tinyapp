@@ -1,11 +1,18 @@
-function generateRandomString() {
-  var result           = '';
-  var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  var charactersLength = characters.length;
-  for ( let i = 0; i < 6; i++ ) {
-     result += characters.charAt(Math.floor(Math.random() * charactersLength));
+users = 
+  {"a": {
+    id: "a", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  },
+
+  "b": {
+    id: "b", 
+    email: "ucat.com", 
+    password: "dishwasher-funk"
   }
-  return result;
+
 }
 
-console.log(generateRandomString());
+
+
+findEmail(users, 'ucat.com');
