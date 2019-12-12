@@ -7,6 +7,7 @@ const PORT = 8080;
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
+const {generateRandomString, findEmail, findUserUrls} = require('./helper_functions');
 
 
 app.set("view engine", "ejs");
@@ -53,43 +54,6 @@ const users = {
 
 
 
-//••••••••••••••••••••••••••••••••••••••••••HELPER FUNCTIONS••••••••••••••••••••••••••••••••••••••••••••••
-
-//Generates a 6 character alphanumeric string for tinyURL & id
-const generateRandomString = function() {
-  let result           = '';
-  let characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let charactersLength = characters.length;
-  for (let i = 0; i < 6; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-};
-
-
-//Searches for email in users object
-const findEmail = function(obj, emailToSearch) {
-  for (let key in obj) {
-    if (obj[key].email === emailToSearch) {
-      return obj[key];
-    }
-  }
-  return false;
-};
-
-
-//Searches for email in users object
-const findUserUrls = function(id) {
-  let newObj = {};
-  for (let key in urlDatabase) {
-    if (urlDatabase[key].userID === id) {
-      newObj[key] = urlDatabase[key];
-    }
-  }
-  return newObj;
-};
-
-
 
 //•••••••••••••••••••••••••••••••••••••••••••••••••GETS•••••••••••••••••••••••••••••••••••••••••••••••••••••
 
@@ -99,9 +63,13 @@ const findUserUrls = function(id) {
 /////////////////////////////////////////////////////
 app.get('/login', (req, res) => {
   let id = req.session.user_id;
-  let user = users[id];
-  let templateVars = {user, notLoggedInError: false};
-  res.render("_login", templateVars);
+  if (id) {
+    res.redirect('/urls');
+  } else {
+    let user = '';
+    let templateVars = {user, notLoggedInError: false};
+    res.render("_login", templateVars);
+  }
 });
 
 
@@ -110,9 +78,13 @@ app.get('/login', (req, res) => {
 ////////////////////////////////
 app.get("/register", (req, res) => {
   let id = req.session.user_id;
-  let user = users[id];
-  let templateVars = { user };
-  res.render("_register", templateVars);
+  if (id) {
+    res.redirect('/urls');
+  } else {
+    let user = '';
+    let templateVars = { user };
+    res.render("_register", templateVars);
+  }
 });
 
 
@@ -138,29 +110,28 @@ app.get('/urls/new', (req, res) => {
 ///////////////////////////////////////////////
 app.get('/urls/:shortURL', (req, res) => {
   let id = req.session.user_id;
-  let urls = findUserUrls(id);
   let shortURL = req.params.shortURL;
-  //checks if you are logged in & have access
+  //checks if you are logged in & own that shortURL
   if (id) {
     let user = users[id];
-    let userObj = findUserUrls(id);
-    for (let key in userObj) {
-      if (shortURL === key) {
-        let user = users[id];
+    let urls = findUserUrls(urlDatabase, id);
+    for (let URL in urls) {
+      if (shortURL === URL) {
         let templateVars = { shortURL, longURL: urlDatabase[shortURL].longURL, user};
         res.render('urls_show', templateVars);
         return;
       }
     }
     //if you don't own the shortURL, sent to /urls with message
+    
     let templateVars = {urls, user, authourizationError: true};
     res.render('urls_index', templateVars);
 
   } else {
-    //if you are not logged in, sent to /login with message
+    //if you are not logged in, redirected to /login with message
     let templateVars = {user:'', notLoggedInError: true };
     res.render('_login', templateVars);
-  }  
+  }
 });
 
 
@@ -175,9 +146,9 @@ app.get("/u/:shortURL", (req, res) => {
     res.redirect(longURL);
   } else {
     //sends error and message
-    res.status(404).send('Sorry that link does not appear to exist....')
+    res.status(404).send('Status Code 404: Sorry that link does not appear to exist....');
   }
-}); 
+});
 
 
 
@@ -185,10 +156,16 @@ app.get("/u/:shortURL", (req, res) => {
 ////////////////////////////////////////////
 app.get('/urls', (req, res) => {
   let id = req.session.user_id;
-  let urls = findUserUrls(id);
-  let user = users[id];
-  let templateVars = { urls, user, authourizationError: false};
-  res.render('urls_index', templateVars);
+  if (id) {
+    let urls = findUserUrls(urlDatabase, id);
+    let user = users[id];
+    let templateVars = { urls, user, authourizationError: false};
+    res.render('urls_index', templateVars);
+  } else {
+    //if you are not logged in, redirected to /login with message
+    let templateVars = {user:'', notLoggedInError: true };
+    res.render('_login', templateVars);
+  }
 });
 
 
@@ -197,7 +174,6 @@ app.get('/urls', (req, res) => {
 ///////////////////////////////
 app.get('/', (req, res) => {
   let id = req.session.user_id;
-  console.log(id)
   if (id) {
     //if you are logged in, it sends you to /urls
     res.redirect('/urls');
@@ -221,15 +197,19 @@ app.get('/', (req, res) => {
 app.post('/urls/:shortURL/delete', (req, res) => {
   let id = req.session.user_id;
   let shortURL = req.params.shortURL;
-  //checks if you own the shortURL before it is deleted 
+  //checks if you own the shortURL before it is deleted
   if (id) {
-    let userObj = findUserUrls(id);
-    for (let key in userObj) {
-      if (shortURL === key) {
+    let urls = findUserUrls(urlDatabase, id);
+    for (let URL in urls) {
+      if (shortURL === URL) {
         delete urlDatabase[shortURL];
         res.redirect("/urls");
+      } else {
+        res.status(403).send('Status Code 403: Sorry you don\'t appear to have the required permission.');
       }
     }
+  } else {
+    res.status(403).send('Status Code 403: Sorry you need to login first.');
   }
 });
 
@@ -242,10 +222,10 @@ app.post('/urls/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
   let newLongURL = req.body.longURL;
   if (id) {
-    let userObj = findUserUrls(id);
-    for (let key in userObj) {
-      if (shortURL === key) {
-        let user = users[id];
+    let urls = findUserUrls(urlDatabase, id);
+    let user = users[id];
+    for (let URL in urls) {
+      if (shortURL === URL) {
         urlDatabase[shortURL].longURL = newLongURL;
         let templateVars = { shortURL, longURL: urlDatabase[shortURL].longURL, user};
         res.render('urls_show', templateVars);
@@ -253,10 +233,10 @@ app.post('/urls/:shortURL', (req, res) => {
       }
     }
     //error because you do not own that URL
-    res.status(404).send('Authorization failed');
+    res.status(403).send('Status Code 403: Authorization failed, you don\'t appear to have the required permission');
   } else {
     //error because you are not logged in
-    res.status(404).send('Authorization failed: please login');
+    res.status(403).send('Status Code 403: Authorization failed, please login');
   }
 });
 
@@ -278,12 +258,12 @@ app.post('/register', (req, res) => {
   let searchResult  = findEmail(users, userEmail);
   //email found, send error
   if (searchResult) {
-    res.status(400).send("Status Code 404: Sorry that email is already in use");
+    res.status(403).send("Status Code 403: Sorry that email is already in use");
   } else {
   //otherwise adds new user into users object with hashed password
     users[idValue] = {id: idValue, email: userEmail, password: hashedPassword};
     req.session.user_id = idValue;
-    res.redirect("/urls");
+    res.redirect('/urls');
   }
 });
 
@@ -294,22 +274,25 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
   let userEmail = req.body.email;
   let userPassword = req.body.password;
-  //searches users database for the email and if found returns that user object 
+  if (userPassword.length === 0 || userEmail.length === 0) {
+    res.status(400).send("Status Code 404: Incorrect email or password format");
+  }
+  //searches users database for the email and if found returns that user object
   let userObject  = findEmail(users, userEmail);
   if (userObject) {
-  //bcrypt checks that the passwords match
+  //email has been found and bcrypt checks that the passwords match
     if (bcrypt.compareSync(userPassword, userObject.password)) {
       //if they match, cookie created & redirect to /urls
       let id = userObject.id;
       req.session.user_id = id;
       res.redirect("/urls");
-    } else  {
+    } else {
       //passwords don't match, sends error
-      res.status(403).send("Incorrect password");
+      res.status(404).send("Status 404: Incorrect password");
     }
   } else {
     //email not found
-    res.status(403).send("Sorry that email does not exist. ");
+    res.status(404).send("Status 404: Sorry that email does not exist. ");
   }
 });
 

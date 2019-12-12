@@ -4,31 +4,19 @@
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
-        <a class="nav-item nav-link" href="/urls">My URLs</a>
-        <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <% if (user) { %>
-        <div class="navbar-nav">
-            <h5><%= user.email %></h5>
-        </div>
-      </div>
-      <form action="/logout" method="POST">
-        <div class="nav-item nav-link">
+    <div class="navbar-nav collapse navbar-collapse w-100" id="navbarNavAltMarkup">
+      <a class="nav-item nav-link" href="/urls">My URLs</a>
+      <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+      <% if (user) { %>
+        <span class="nav-item navbar-text"><%= user.email %></span>
+        <form class="ml-auto form-inline" action="/logout" method="POST">
           <button type="submit" class="btn btn-primary">Log Out</button>
-        </div>
-      </form>
+        </form>
       <% } else { %>
-      <form action="/login" method="POST">
-        <div class="navbar-nav">
-          <a class="nav-item nav-link" href="/login">Click here to login</a>
+        <a class="nav-item nav-link" href="/login">Click here to login</a>
         <a class="nav-item nav-link" href="/register">Click here to register</a>
-        </div>
-      </form>
       <% } %>
     </div>
-    </div>
-   
   </nav>
 </header>
 
