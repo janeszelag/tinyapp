@@ -13,6 +13,20 @@
         <h2><%- include('partials/_header') %></h2>
   </header>
   <body>
+    <% if (incorrectPasswordError) { %>
+      <div class="alert alert-warning" role="alert">
+        <p>
+          Sorry incorrect format or password. Please try again.
+        </p>
+      </div>
+    <% } %>
+    <% if (noEmailError) { %>
+      <div class="alert alert-warning" role="alert">
+        <p>
+          Sorry that email does not appear to be linked to an account. You may have to register first.
+        </p>
+      </div>
+    <% } %>
     <% if (notLoggedInError) { %>
       <div class="alert alert-warning" role="alert">
         <p>

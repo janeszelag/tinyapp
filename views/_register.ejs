@@ -13,6 +13,20 @@
         <h2><%- include('partials/_header') %></h2>
   </header>
   <body>
+    <% if (incorrectPasswordError) { %>
+      <div class="alert alert-warning" role="alert">
+        <p>
+          Sorry incorrect emaail or password format. Please try again.
+        </p>
+      </div>
+    <% } %>
+    <% if (emailError) { %>
+      <div class="alert alert-warning" role="alert">
+        <p>
+          Sorry that email appears to be already linked to an account. Please try again.
+        </p>
+      </div>
+    <% } %>
   <main style="margin: 1em;">
     <form method="POST" action="/register">
       <label>Enter email to register:</label><input class="form-control" type="email" name="email" placeholder="example@email.com" style="width: 300px; margin: 1em">

@@ -67,7 +67,7 @@ app.get('/login', (req, res) => {
     res.redirect('/urls');
   } else {
     let user = '';
-    let templateVars = {user, notLoggedInError: false};
+    let templateVars = {user, notLoggedInError: false, incorrectPasswordError: false, noEmailError: false};
     res.render('_login', templateVars);
   }
 });
@@ -82,7 +82,7 @@ app.get('/register', (req, res) => {
     res.redirect('/urls');
   } else {
     let user = '';
-    let templateVars = { user };
+    let templateVars = { user, incorrectPasswordError: false, emailError: false };
     res.render('_register', templateVars);
   }
 });
@@ -99,7 +99,7 @@ app.get('/urls/new', (req, res) => {
     res.render('urls_new', templateVars);
   } else {
     //you cannot create a shortURL if you are not logged in
-    let templateVars = {user:'', notLoggedInError: true };
+    let templateVars = {user:'', notLoggedInError: true,  incorrectPasswordError: false, noEmailError: false };
     res.render('_login', templateVars);
   }
 });
@@ -128,7 +128,7 @@ app.get('/urls/:shortURL', (req, res) => {
 
   } else {
     //if you are NOT logged in, redirected to /login with message
-    let templateVars = {user:'', notLoggedInError: true };
+    let templateVars = {user:'', notLoggedInError: true,  incorrectPasswordError: false, noEmailError: false };
     res.render('_login', templateVars);
   }
 });
@@ -164,7 +164,7 @@ app.get('/urls', (req, res) => {
     res.render('urls_index', templateVars);
   } else {
     //if you are not logged in, redirects to /login with message
-    let templateVars = {user:'', notLoggedInError: true };
+    let templateVars = {user:'', notLoggedInError: true,  incorrectPasswordError: false, noEmailError: false };
     res.render('_login', templateVars);
   }
 });
@@ -203,16 +203,19 @@ app.post('/urls/:shortURL/delete', (req, res) => {
     let urls = findUserUrls(urlDatabase, id);
     for (let URL in urls) {
       if (shortURL === URL) {
+        //if you own it, it gets deleted
         delete urlDatabase[shortURL];
         res.redirect('/urls');
         return;
       } else {
-        res.status(403).send('Status Code 403: Sorry you don\'t appear to have the required permission.');
+        //if you don't own you get error
+        res.status(403).send('Status Code 403: Not authourized.')
         return;
       }
     }
   } else {
-    res.status(403).send('Status Code 403: Sorry you need to login first.');
+    //if you aren't logged in, get error
+    res.status(403).send('Status Code 403: Not authourized.')
   }
 });
 
@@ -230,17 +233,22 @@ app.post('/urls/:shortURL', (req, res) => {
       if (shortURL === URL) {
         //if you own the shortURL, the longURL is modified
         let newLongURL = req.body.longURL;
-        urlDatabase[shortURL].longURL = newLongURL;
-        let templateVars = { shortURL, longURL: urlDatabase[shortURL].longURL, user};
-        res.render('urls_show', templateVars);
-        return;
+        //check that empty field wasn't submitted
+        if (newLongURL.length !== 0) {
+          urlDatabase[shortURL].longURL = newLongURL;
+          let templateVars = { shortURL, longURL: urlDatabase[shortURL].longURL, user};
+          res.render('urls_show', templateVars);
+          return;
+        } else {
+          res.redirect('/urls')
+        }
       }
     }
     //if you don't own that shortURL, an error is sent
-    res.status(403).send('Status Code 403: Authorization failed, you don\'t appear to have the required permission');
+    res.status(403).send('Status Code 403: Not authourized.')
   } else {
     //if you are not loggen in, an error is sent
-    res.status(403).send('Status Code 403: Authorization failed, please login');
+    res.status(404).send('Status Code 403: Error.')
   }
 });
 
@@ -256,12 +264,16 @@ app.post('/register', (req, res) => {
   const hashedPassword = bcrypt.hashSync(userPassword, 10);
   //checks that email & password are not emppty
   if (userPassword.length === 0 || userEmail.length === 0) {
-    res.status(400).send('Status Code 404: Incorrect email or password format');
+    let templateVars = { user: '', incorrectPasswordError: true, emailError: false};
+    res.status(404).render('_register', templateVars );
+    return;
   }
   //checks that the email is not yet used
   let searchResult  = findEmail(users, userEmail);
   if (searchResult) {//email is already in use, sends error
-    res.status(403).send('Status Code 403: Sorry that email is already in use');
+    let templateVars = { user: '', incorrectPasswordError: false, emailError: true};
+    res.status(404).render('_register', templateVars );
+    return;
   } else {
   //email is not in use, new user is added to users object with hashed password
     users[idValue] = {id: idValue, email: userEmail, password: hashedPassword};
@@ -278,7 +290,9 @@ app.post('/login', (req, res) => {
   let userEmail = req.body.email;
   let userPassword = req.body.password;
   if (userPassword.length === 0 || userEmail.length === 0) {
-    res.status(400).send('Status Code 404: Incorrect email or password format');
+    let templateVars = { user: '', notLoggedInError: false,  incorrectPasswordError: true, noEmailError: false  }
+    res.status(400).render('_login', templateVars );
+    return;
   }
   //searches users database for the email and if found returns that user object
   let userObject  = findEmail(users, userEmail);
@@ -289,13 +303,17 @@ app.post('/login', (req, res) => {
       let id = userObject.id;
       req.session.user_id = id;
       res.redirect('/urls');
+      return;
     } else {
-      //passwords don't match, sends error
-      res.status(404).send('Status 404: Incorrect password');
+      //passwords don't match, reloads login with error
+      let templateVars = { user: '', notLoggedInError: false,  incorrectPasswordError: true, noEmailError: false  }
+      res.status(404).render('_login', templateVars );
+      return;
     }
   } else {
     //email not found
-    res.status(404).send('Status 404: Sorry that email does not exist. ');
+    let templateVars = { user: '', notLoggedInError: false,  incorrectPasswordError: false, noEmailError: true }
+    res.status(404).render('_login', templateVars );
   }
 });
 
