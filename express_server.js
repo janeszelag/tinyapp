@@ -205,8 +205,10 @@ app.post('/urls/:shortURL/delete', (req, res) => {
       if (shortURL === URL) {
         delete urlDatabase[shortURL];
         res.redirect('/urls');
+        return;
       } else {
         res.status(403).send('Status Code 403: Sorry you don\'t appear to have the required permission.');
+        return;
       }
     }
   } else {
@@ -304,7 +306,7 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   //ends cookie session
   req.session = null;
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 
