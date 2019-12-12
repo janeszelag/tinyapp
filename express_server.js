@@ -3,14 +3,18 @@
 const express = require('express');
 const app = express();
 const PORT = 8080; //default port is 8080
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session')
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  secret: 'Katherine',
 
-
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 
 //DATA
 
@@ -84,7 +88,7 @@ app.listen(PORT, () => {
 
 //FORM for logging in
 app.get('/login', (req, res) => {
-  let id = req.cookies['user_id'];
+  let id = req.session.user_id;
   let user = users[id];
   let templateVars = { user };
   res.render("_login", templateVars);
@@ -93,7 +97,7 @@ app.get('/login', (req, res) => {
 
 //FORM for creating new tiny URL
 app.get('/urls/new', (req, res) => {
-  let id = req.cookies['user_id'];
+  let id = req.session.user_id;
   if (id) {
     let user = users[id];
     let templateVars = { user };
@@ -106,7 +110,7 @@ app.get('/urls/new', (req, res) => {
 
 //FORM to register
 app.get("/register", (req, res) => {
-  let id = req.cookies['user_id'];
+  let id = req.session.user_id ;
   let user = users[id];
   let templateVars = { user };
   res.render("_register", templateVars);
@@ -115,7 +119,7 @@ app.get("/register", (req, res) => {
 
 //page that DISPLAYS the long and short URL including a hyperlink [if and only if you own that shortURL]
 app.get('/urls/:shortURL', (req, res) => {
-  let id = req.cookies['user_id'];
+  let id = req.session.user_id;
   let shortURL = req.params.shortURL;
   if (id) {
     let userObj = findUserUrls(id);
@@ -147,7 +151,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 //INDEX - page with all of our current urls
 app.get('/urls', (req, res) => {
-  let id = req.cookies['user_id'];
+  let id = req.session.user_id;
   let urls = findUserUrls(id);
   let user = users[id];
   let templateVars = { urls, user};
@@ -167,7 +171,7 @@ app.get('/', (req, res) => {
 
 //DELETE url from urlDatabase
 app.post('/urls/:shortURL/delete', (req, res) => {
-  let id = req.cookies['user_id'];
+  let id = req.session.user_id ;
   let shortURL = req.params.shortURL;
   if (id) {
     let userObj = findUserUrls(id);
@@ -183,7 +187,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 //UPDATE a longURL [if the shortURL is yours]
 app.post('/urls/:shortURL', (req, res) => {
-  let id = req.cookies['user_id'];
+  let id = req.session.user_id ;
   let shortURL = req.params.shortURL;
   let newLongURL = req.body.longURL
   if (id) {
@@ -217,23 +221,21 @@ app.post('/register', (req, res) => {
     res.status(400).send("Status Code 404: Sorry that email is already in use");
   } else {
     users[idValue] = {id: idValue, email: userEmail, password: hashedPassword};
-    res.cookie('user_id', idValue);
+    req.session.user_id = idValue;
     res.redirect("/urls");
   }
 });
 
 
-//bcrypt.compareSync("purple-monkey-dinosaur", hashedPassword);
 //LOGIN
 app.post('/login', (req, res) => {
   let userEmail = req.body.email;
   let userPassword = req.body.password;
   let userObject  = findEmail(users, userEmail);
-  console.log(userObject);
   if (userObject) {
     if (bcrypt.compareSync(userPassword, userObject.password)) {
       let id = userObject.id;
-      res.cookie('user_id', id);
+      req.session.user_id = id;
       res.redirect("/urls");
     } else  {
       res.status(403).send("Incorrect password");
@@ -245,13 +247,13 @@ app.post('/login', (req, res) => {
 
 //LOGOUT
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect("/urls");
 });
 
 //CREAT tiny URL
 app.post('/urls', (req, res) => {
-  let id = req.cookies['user_id'];
+  let id = req.session.user_id;
   let shortURL = generateRandomString();
   let longURL = req.body.longURL
   urlDatabase[shortURL] = { longURL, userID: id}
