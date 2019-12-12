@@ -5,6 +5,7 @@ const app = express();
 const PORT = 8080; //default port is 8080
 const cookieParser = require('cookie-parser');
 const bodyParser = require("body-parser");
+const bcrypt = require('bcrypt');
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
@@ -207,6 +208,7 @@ app.post('/register', (req, res) => {
   let idValue = generateRandomString();
   let userEmail = req.body.email;
   let userPassword = req.body.password;
+  const hashedPassword = bcrypt.hashSync(userPassword, 10);
   if (userPassword.length === 0 || userEmail.length === 0) {
     res.status(400).send("Status Code 404: Incorrect email or password format");
   }
@@ -214,19 +216,22 @@ app.post('/register', (req, res) => {
   if (searchResult) {
     res.status(400).send("Status Code 404: Sorry that email is already in use");
   } else {
-    users[idValue] = {id: idValue, email: userEmail, password: userPassword};
+    users[idValue] = {id: idValue, email: userEmail, password: hashedPassword};
     res.cookie('user_id', idValue);
     res.redirect("/urls");
   }
 });
 
+
+//bcrypt.compareSync("purple-monkey-dinosaur", hashedPassword);
 //LOGIN
 app.post('/login', (req, res) => {
   let userEmail = req.body.email;
   let userPassword = req.body.password;
   let userObject  = findEmail(users, userEmail);
+  console.log(userObject);
   if (userObject) {
-    if (userPassword === userObject.password) {
+    if (bcrypt.compareSync(userPassword, userObject.password)) {
       let id = userObject.id;
       res.cookie('user_id', id);
       res.redirect("/urls");
