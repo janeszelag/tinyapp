@@ -7,6 +7,7 @@ const PORT = 8080;
 const cookieSession = require('cookie-session');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
+const methodOverride = require('method-override');
 const {generateRandomString, findEmail, findUserUrls} = require('./helper_functions');
 
 
@@ -18,6 +19,7 @@ app.use(cookieSession({
   // Cookie Options
   maxAge: 5 * 60 * 1000 // 5 minutes
 }));
+app.use(methodOverride('_method'));
 
 
 
@@ -195,7 +197,7 @@ app.get('/', (req, res) => {
 
 //♦︎♦︎♦︎♦︎DELETES shortURL from urlDatabase♦︎♦︎♦︎♦︎
 ////////////////////////////////////////////////////////
-app.post('/urls/:shortURL/delete', (req, res) => {
+app.delete('/urls/:shortURL/delete', (req, res) => {
   let id = req.session.user_id;
   let shortURL = req.params.shortURL;
   //checks if you own the shortURL before it is deleted
@@ -223,7 +225,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 //♦︎♦︎♦︎♦︎UPDATE a longURL [if the shortURL is yours and you are logged in]♦︎♦︎♦︎♦︎
 //////////////////////////////////////////////////////////
-app.post('/urls/:shortURL', (req, res) => {
+app.put('/urls/:shortURL', (req, res) => {
   let id = req.session.user_id;
   let shortURL = req.params.shortURL;
   if (id) { //if you are logged in, searches through your shortURLs
