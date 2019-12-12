@@ -3,7 +3,7 @@
 const express = require('express');
 const app = express();
 const PORT = 8080; //default port is 8080
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
 app.set("view engine", "ejs");
@@ -11,10 +11,9 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
   secret: 'Katherine',
-
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
+}));
 
 //DATA
 
@@ -54,10 +53,10 @@ const generateRandomString = function() {
 //Searches for email in users object
 const findEmail = function(obj, emailToSearch) {
   for (let key in obj) {
-      if (obj[key].email === emailToSearch) {
-        return obj[key];
-      }
+    if (obj[key].email === emailToSearch) {
+      return obj[key];
     }
+  }
   return false;
 };
 
@@ -67,10 +66,10 @@ const findEmail = function(obj, emailToSearch) {
 const findUserUrls = function(id) {
   let newObj = {};
   for (let key in urlDatabase) {
-      if (urlDatabase[key].userID === id) {
-        newObj[key] = urlDatabase[key];
-      }
+    if (urlDatabase[key].userID === id) {
+      newObj[key] = urlDatabase[key];
     }
+  }
   return newObj;
 };
 
@@ -103,14 +102,14 @@ app.get('/urls/new', (req, res) => {
     let templateVars = { user };
     res.render("urls_new", templateVars);
   } else {
-    res.redirect('/login')
+    res.redirect('/login');
   }
 });
 
 
 //FORM to register
 app.get("/register", (req, res) => {
-  let id = req.session.user_id ;
+  let id = req.session.user_id;
   let user = users[id];
   let templateVars = { user };
   res.render("_register", templateVars);
@@ -140,12 +139,12 @@ app.get('/urls/:shortURL', (req, res) => {
 
 //HYPERLINK when hyperlink is clicked, redirects to actual longURL page
 app.get("/u/:shortURL", (req, res) => {
-  let shortURL = req.params.shortURL
+  let shortURL = req.params.shortURL;
   if (urlDatabase.hasOwnProperty(shortURL)) {
     const longURL = urlDatabase[shortURL].longURL;
     res.redirect(longURL);
   } else {
-    res.status(403).send('Sorry, we can\'t seem to find what you are looking for....')
+    res.status(403).send('Sorry, we can\'t seem to find what you are looking for....');
   }
 });
 
@@ -171,7 +170,7 @@ app.get('/', (req, res) => {
 
 //DELETE url from urlDatabase
 app.post('/urls/:shortURL/delete', (req, res) => {
-  let id = req.session.user_id ;
+  let id = req.session.user_id;
   let shortURL = req.params.shortURL;
   if (id) {
     let userObj = findUserUrls(id);
@@ -187,9 +186,9 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 //UPDATE a longURL [if the shortURL is yours]
 app.post('/urls/:shortURL', (req, res) => {
-  let id = req.session.user_id ;
+  let id = req.session.user_id;
   let shortURL = req.params.shortURL;
-  let newLongURL = req.body.longURL
+  let newLongURL = req.body.longURL;
   if (id) {
     let userObj = findUserUrls(id);
     for (let key in userObj) {
@@ -251,11 +250,11 @@ app.post('/logout', (req, res) => {
   res.redirect("/urls");
 });
 
-//CREAT tiny URL
+//CREATE tiny URL
 app.post('/urls', (req, res) => {
   let id = req.session.user_id;
   let shortURL = generateRandomString();
-  let longURL = req.body.longURL
-  urlDatabase[shortURL] = { longURL, userID: id}
-  res.redirect(`/urls/${shortURL}`)
+  let longURL = req.body.longURL;
+  urlDatabase[shortURL] = { longURL, userID: id};
+  res.redirect(`/urls/${shortURL}`);
 });
