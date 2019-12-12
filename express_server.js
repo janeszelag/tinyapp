@@ -50,7 +50,7 @@ const users = {
     //new passwords will be hashed
     password: 'dishwasher-funk'
   }
-}
+};
 
 
 
@@ -155,9 +155,9 @@ app.get('/u/:shortURL', (req, res) => {
 ////////////////////////////////////////////
 app.get('/urls', (req, res) => {
   let id = req.session.user_id;
-  //checks that you are loggen in 
+  //checks that you are loggen in
   if (id) {
-    //you are logged in, the shortURLs you own (if any) are retrieved 
+    //you are logged in, the shortURLs you own (if any) are retrieved
     let urls = findUserUrls(urlDatabase, id);
     let user = users[id];
     let templateVars = { urls, user, authourizationError: false};
@@ -209,13 +209,13 @@ app.post('/urls/:shortURL/delete', (req, res) => {
         return;
       } else {
         //if you don't own you get error
-        res.status(403).send('Status Code 403: Not authourized.')
+        res.status(403).send('Status Code 403: Not authourized.');
         return;
       }
     }
   } else {
     //if you aren't logged in, get error
-    res.status(403).send('Status Code 403: Not authourized.')
+    res.status(403).send('Status Code 403: Not authourized.');
   }
 });
 
@@ -240,15 +240,15 @@ app.post('/urls/:shortURL', (req, res) => {
           res.render('urls_show', templateVars);
           return;
         } else {
-          res.redirect('/urls')
+          res.redirect('/urls');
         }
       }
     }
     //if you don't own that shortURL, an error is sent
-    res.status(403).send('Status Code 403: Not authourized.')
+    res.status(403).send('Status Code 403: Not authourized.');
   } else {
     //if you are not loggen in, an error is sent
-    res.status(404).send('Status Code 403: Error.')
+    res.status(404).send('Status Code 403: Error.');
   }
 });
 
@@ -265,14 +265,14 @@ app.post('/register', (req, res) => {
   //checks that email & password are not emppty
   if (userPassword.length === 0 || userEmail.length === 0) {
     let templateVars = { user: '', incorrectPasswordError: true, emailError: false};
-    res.status(404).render('_register', templateVars );
+    res.status(404).render('_register', templateVars);
     return;
   }
   //checks that the email is not yet used
   let searchResult  = findEmail(users, userEmail);
   if (searchResult) {//email is already in use, sends error
     let templateVars = { user: '', incorrectPasswordError: false, emailError: true};
-    res.status(404).render('_register', templateVars );
+    res.status(404).render('_register', templateVars);
     return;
   } else {
   //email is not in use, new user is added to users object with hashed password
@@ -290,8 +290,8 @@ app.post('/login', (req, res) => {
   let userEmail = req.body.email;
   let userPassword = req.body.password;
   if (userPassword.length === 0 || userEmail.length === 0) {
-    let templateVars = { user: '', notLoggedInError: false,  incorrectPasswordError: true, noEmailError: false  }
-    res.status(400).render('_login', templateVars );
+    let templateVars = { user: '', notLoggedInError: false,  incorrectPasswordError: true, noEmailError: false  };
+    res.status(400).render('_login', templateVars);
     return;
   }
   //searches users database for the email and if found returns that user object
@@ -306,14 +306,14 @@ app.post('/login', (req, res) => {
       return;
     } else {
       //passwords don't match, reloads login with error
-      let templateVars = { user: '', notLoggedInError: false,  incorrectPasswordError: true, noEmailError: false  }
-      res.status(404).render('_login', templateVars );
+      let templateVars = { user: '', notLoggedInError: false,  incorrectPasswordError: true, noEmailError: false  };
+      res.status(404).render('_login', templateVars);
       return;
     }
   } else {
     //email not found
-    let templateVars = { user: '', notLoggedInError: false,  incorrectPasswordError: false, noEmailError: true }
-    res.status(404).render('_login', templateVars );
+    let templateVars = { user: '', notLoggedInError: false,  incorrectPasswordError: false, noEmailError: true };
+    res.status(404).render('_login', templateVars);
   }
 });
 
