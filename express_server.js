@@ -89,7 +89,7 @@ app.listen(PORT, () => {
 app.get('/login', (req, res) => {
   let id = req.session.user_id;
   let user = users[id];
-  let templateVars = { user };
+  let templateVars = {user, authourizationError: false, notLoggedInError: false};
   res.render("_login", templateVars);
 });
 
@@ -102,7 +102,7 @@ app.get('/urls/new', (req, res) => {
     let templateVars = { user };
     res.render("urls_new", templateVars);
   } else {
-    res.redirect('/login');
+    res.redirect(400, '/login', 400);
   }
 });
 
@@ -121,6 +121,7 @@ app.get('/urls/:shortURL', (req, res) => {
   let id = req.session.user_id;
   let shortURL = req.params.shortURL;
   if (id) {
+    let user = users[id];
     let userObj = findUserUrls(id);
     for (let key in userObj) {
       if (shortURL === key) {
@@ -130,11 +131,12 @@ app.get('/urls/:shortURL', (req, res) => {
         return;
       }
     }
-    res.redirect('/login');
+    let templateVars = {user, authourizationError: true, notLoggedInError: false };
+    res.render('_login', templateVars);
   } else {
-    res.redirect('/login');
-  }
-  
+    // let errors = {authourizationError: false, notLoggedInError: true};
+    res.redirect(400, '/login');
+  }  
 });
 
 //HYPERLINK when hyperlink is clicked, redirects to actual longURL page
@@ -200,11 +202,13 @@ app.post('/urls/:shortURL', (req, res) => {
         return;
       }
     }
-    res.redirect('/login');
+    res.redirect(400, '/login');
   } else {
-    res.redirect('/login');
+      res.redirect(400, '/login');
   }
 });
+
+
 
 //CREATE a new user
 app.post('/register', (req, res) => {
