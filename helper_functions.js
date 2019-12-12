@@ -4,13 +4,13 @@
 
 //Generates a 6 character alphanumeric string for tinyURL & id
 const generateRandomString = function() {
-  let result           = '';
+  let randomString           = '';
   let characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let charactersLength = characters.length;
   for (let i = 0; i < 6; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    randomString += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
-  return result;
+  return randomString;
 };
 
 

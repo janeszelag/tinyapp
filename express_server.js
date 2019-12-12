@@ -5,12 +5,12 @@ const express = require('express');
 const app = express();
 const PORT = 8080;
 const cookieSession = require('cookie-session');
-const bodyParser = require("body-parser");
+const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const {generateRandomString, findEmail, findUserUrls} = require('./helper_functions');
 
 
-app.set("view engine", "ejs");
+app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
@@ -35,8 +35,8 @@ app.listen(PORT, () => {
 //♦︎♦︎♦︎♦︎URL OBJECT♦︎♦︎♦︎♦︎
 /////////////////////////////////////////////////
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+  b6UTxQ: { longURL: 'https://www.tsn.ca', userID: 'aJ48lW' },
+  i3BoGr: { longURL: 'https://www.google.ca', userID: 'aJ48lW' }
 };
 
 
@@ -44,13 +44,13 @@ const urlDatabase = {
 //♦︎♦︎♦︎♦︎USERS OBJECT♦︎♦︎♦︎♦︎
 /////////////////////////////////////////////
 const users = {
-  "1ddf3g": {
-    id: "1ddf3g",
-    email: "ucat.com",
+  '1ddf3g': {
+    id: '1ddf3g',
+    email: 'ucat.com',
     //new passwords will be hashed
-    password: "dishwasher-funk"
+    password: 'dishwasher-funk'
   }
-};
+}
 
 
 
@@ -59,7 +59,7 @@ const users = {
 
 
 
-//♦︎♦︎♦︎♦︎FORM for logging in♦︎♦︎♦︎♦︎
+//♦︎♦︎♦︎♦︎FORM to LOGIN ♦︎♦︎♦︎♦︎
 /////////////////////////////////////////////////////
 app.get('/login', (req, res) => {
   let id = req.session.user_id;
@@ -68,35 +68,35 @@ app.get('/login', (req, res) => {
   } else {
     let user = '';
     let templateVars = {user, notLoggedInError: false};
-    res.render("_login", templateVars);
+    res.render('_login', templateVars);
   }
 });
 
 
 
-//♦︎♦︎♦︎♦︎FORM to register♦︎♦︎♦︎♦︎
+//♦︎♦︎♦︎♦︎FORM to REGISTER♦︎♦︎♦︎♦︎
 ////////////////////////////////
-app.get("/register", (req, res) => {
+app.get('/register', (req, res) => {
   let id = req.session.user_id;
   if (id) {
     res.redirect('/urls');
   } else {
     let user = '';
     let templateVars = { user };
-    res.render("_register", templateVars);
+    res.render('_register', templateVars);
   }
 });
 
 
 
-//♦︎♦︎♦︎♦︎FORM for creating new tiny URL♦︎♦︎♦︎♦︎
+//♦︎♦︎♦︎♦︎FORM for creating NEW shortURL♦︎♦︎♦︎♦︎
 //////////////////////////////////////////////////////
 app.get('/urls/new', (req, res) => {
   let id = req.session.user_id;
   if (id) {
     let user = users[id];
     let templateVars = { user };
-    res.render("urls_new", templateVars);
+    res.render('urls_new', templateVars);
   } else {
     //you cannot create a shortURL if you are not logged in
     let templateVars = {user:'', notLoggedInError: true };
@@ -106,29 +106,28 @@ app.get('/urls/new', (req, res) => {
 
 
 
-//♦︎♦︎♦︎♦︎shortURL PAGE \ longURL EDIT form \ hyperlink♦︎♦︎♦︎♦︎
+//♦︎♦︎♦︎♦︎shortURL PAGE \ EDIT form \ hyperlink♦︎♦︎♦︎♦︎
 ///////////////////////////////////////////////
 app.get('/urls/:shortURL', (req, res) => {
   let id = req.session.user_id;
   let shortURL = req.params.shortURL;
-  //checks if you are logged in & own that shortURL
-  if (id) {
+  if (id) {//if you are logged in
     let user = users[id];
     let urls = findUserUrls(urlDatabase, id);
     for (let URL in urls) {
       if (shortURL === URL) {
+        //and you own that shortURL, urls_show page is displayed
         let templateVars = { shortURL, longURL: urlDatabase[shortURL].longURL, user};
         res.render('urls_show', templateVars);
         return;
       }
     }
-    //if you don't own the shortURL, sent to /urls with message
-    
+    //if you are logged in but DO NOT own the shortURL, sent to /urls with message
     let templateVars = {urls, user, authourizationError: true};
     res.render('urls_index', templateVars);
 
   } else {
-    //if you are not logged in, redirected to /login with message
+    //if you are NOT logged in, redirected to /login with message
     let templateVars = {user:'', notLoggedInError: true };
     res.render('_login', templateVars);
   }
@@ -136,16 +135,16 @@ app.get('/urls/:shortURL', (req, res) => {
 
 
 
-//♦︎♦︎♦︎♦︎LINK when clicked, redirects to actual longURL page♦︎♦︎♦︎♦︎
+//♦︎♦︎♦︎♦︎HYPERLINK/shareable link that redirects to actual longURL page♦︎♦︎♦︎♦︎
 //////////////////////////////////////////////////////////////////////
-app.get("/u/:shortURL", (req, res) => {
+app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
   //checks database for that shortURL, if it exists it redirects
-  if (urlDatabase.hasOwnProperty(shortURL)) {
+  if (urlDatabase[shortURL]) { //anyone has access
     const longURL = urlDatabase[shortURL].longURL;
     res.redirect(longURL);
   } else {
-    //sends error and message
+    //if it does not exist, sends error and html
     res.status(404).send('Status Code 404: Sorry that link does not appear to exist....');
   }
 });
@@ -156,13 +155,15 @@ app.get("/u/:shortURL", (req, res) => {
 ////////////////////////////////////////////
 app.get('/urls', (req, res) => {
   let id = req.session.user_id;
+  //checks that you are loggen in 
   if (id) {
+    //you are logged in, the shortURLs you own (if any) are retrieved 
     let urls = findUserUrls(urlDatabase, id);
     let user = users[id];
     let templateVars = { urls, user, authourizationError: false};
     res.render('urls_index', templateVars);
   } else {
-    //if you are not logged in, redirected to /login with message
+    //if you are not logged in, redirects to /login with message
     let templateVars = {user:'', notLoggedInError: true };
     res.render('_login', templateVars);
   }
@@ -203,7 +204,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
     for (let URL in urls) {
       if (shortURL === URL) {
         delete urlDatabase[shortURL];
-        res.redirect("/urls");
+        res.redirect('/urls');
       } else {
         res.status(403).send('Status Code 403: Sorry you don\'t appear to have the required permission.');
       }
@@ -220,22 +221,23 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 app.post('/urls/:shortURL', (req, res) => {
   let id = req.session.user_id;
   let shortURL = req.params.shortURL;
-  let newLongURL = req.body.longURL;
-  if (id) {
+  if (id) { //if you are logged in, searches through your shortURLs
     let urls = findUserUrls(urlDatabase, id);
     let user = users[id];
     for (let URL in urls) {
       if (shortURL === URL) {
+        //if you own the shortURL, the longURL is modified
+        let newLongURL = req.body.longURL;
         urlDatabase[shortURL].longURL = newLongURL;
         let templateVars = { shortURL, longURL: urlDatabase[shortURL].longURL, user};
         res.render('urls_show', templateVars);
         return;
       }
     }
-    //error because you do not own that URL
+    //if you don't own that shortURL, an error is sent
     res.status(403).send('Status Code 403: Authorization failed, you don\'t appear to have the required permission');
   } else {
-    //error because you are not logged in
+    //if you are not loggen in, an error is sent
     res.status(403).send('Status Code 403: Authorization failed, please login');
   }
 });
@@ -252,15 +254,14 @@ app.post('/register', (req, res) => {
   const hashedPassword = bcrypt.hashSync(userPassword, 10);
   //checks that email & password are not emppty
   if (userPassword.length === 0 || userEmail.length === 0) {
-    res.status(400).send("Status Code 404: Incorrect email or password format");
+    res.status(400).send('Status Code 404: Incorrect email or password format');
   }
   //checks that the email is not yet used
   let searchResult  = findEmail(users, userEmail);
-  //email found, send error
-  if (searchResult) {
-    res.status(403).send("Status Code 403: Sorry that email is already in use");
+  if (searchResult) {//email is already in use, sends error
+    res.status(403).send('Status Code 403: Sorry that email is already in use');
   } else {
-  //otherwise adds new user into users object with hashed password
+  //email is not in use, new user is added to users object with hashed password
     users[idValue] = {id: idValue, email: userEmail, password: hashedPassword};
     req.session.user_id = idValue;
     res.redirect('/urls');
@@ -275,7 +276,7 @@ app.post('/login', (req, res) => {
   let userEmail = req.body.email;
   let userPassword = req.body.password;
   if (userPassword.length === 0 || userEmail.length === 0) {
-    res.status(400).send("Status Code 404: Incorrect email or password format");
+    res.status(400).send('Status Code 404: Incorrect email or password format');
   }
   //searches users database for the email and if found returns that user object
   let userObject  = findEmail(users, userEmail);
@@ -285,14 +286,14 @@ app.post('/login', (req, res) => {
       //if they match, cookie created & redirect to /urls
       let id = userObject.id;
       req.session.user_id = id;
-      res.redirect("/urls");
+      res.redirect('/urls');
     } else {
       //passwords don't match, sends error
-      res.status(404).send("Status 404: Incorrect password");
+      res.status(404).send('Status 404: Incorrect password');
     }
   } else {
     //email not found
-    res.status(404).send("Status 404: Sorry that email does not exist. ");
+    res.status(404).send('Status 404: Sorry that email does not exist. ');
   }
 });
 
@@ -303,7 +304,7 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   //ends cookie session
   req.session = null;
-  res.redirect("/urls");
+  res.redirect('/urls');
 });
 
 
