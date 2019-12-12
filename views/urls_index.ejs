@@ -14,6 +14,13 @@
         <h2><%- include('partials/_header') %></h2>
   </header>
   <main style="margin: 1em;">
+    <% if (authourizationError) { %>
+      <div class="alert alert-warning" role="alert">
+        <p>
+          Sorry that page does not exist or you may not have access.
+        </p>
+      </div>
+    <% } %>
     <h3>My URLs</h3>
     <table class="table">
       <thead>

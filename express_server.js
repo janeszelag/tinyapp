@@ -1,42 +1,59 @@
-//CONSTANTS & REQUIREMENTS
+//•••••••••••••••••••••••••••••••••••••••••CONSTANTS & REQUIREMENTS•••••••••••••••••••••••••••••••••••••••••
+
 
 const express = require('express');
 const app = express();
-const PORT = 8080; //default port is 8080
+const PORT = 8080;
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
+
+
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
   secret: 'Katherine',
   // Cookie Options
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  maxAge: 5 * 60 * 1000 // 5 minutes
 }));
 
-//DATA
 
 
-//URL OBJECTS
+//♦︎♦︎♦︎♦︎Server is listening♦︎♦︎♦︎♦︎
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
+
+
+
+//••••••••••••••••••••••••••••••••••••••••••••••••••DATA•••••••••••••••••••••••••••••••••••••••••••••••••••
+
+
+
+//♦︎♦︎♦︎♦︎URL OBJECT♦︎♦︎♦︎♦︎
+/////////////////////////////////////////////////
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 
-//USERS OBJECT
+
+//♦︎♦︎♦︎♦︎USERS OBJECT♦︎♦︎♦︎♦︎
+/////////////////////////////////////////////
 const users = {
-  "b": {
-    id: "b",
+  "1ddf3g": {
+    id: "1ddf3g",
     email: "ucat.com",
+    //new passwords will be hashed
     password: "dishwasher-funk"
   }
 };
 
 
 
-//HELPER FUNCTIONS
+//••••••••••••••••••••••••••••••••••••••••••HELPER FUNCTIONS••••••••••••••••••••••••••••••••••••••••••••••
 
 //Generates a 6 character alphanumeric string for tinyURL & id
 const generateRandomString = function() {
@@ -61,7 +78,6 @@ const findEmail = function(obj, emailToSearch) {
 };
 
 
-
 //Searches for email in users object
 const findUserUrls = function(id) {
   let newObj = {};
@@ -75,39 +91,23 @@ const findUserUrls = function(id) {
 
 
 
-
-//Server is listening
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
+//•••••••••••••••••••••••••••••••••••••••••••••••••GETS•••••••••••••••••••••••••••••••••••••••••••••••••••••
 
 
 
-//GETS
-
-//FORM for logging in
+//♦︎♦︎♦︎♦︎FORM for logging in♦︎♦︎♦︎♦︎
+/////////////////////////////////////////////////////
 app.get('/login', (req, res) => {
   let id = req.session.user_id;
   let user = users[id];
-  let templateVars = {user, authourizationError: false, notLoggedInError: false};
+  let templateVars = {user, notLoggedInError: false};
   res.render("_login", templateVars);
 });
 
 
-//FORM for creating new tiny URL
-app.get('/urls/new', (req, res) => {
-  let id = req.session.user_id;
-  if (id) {
-    let user = users[id];
-    let templateVars = { user };
-    res.render("urls_new", templateVars);
-  } else {
-    res.redirect(400, '/login', 400);
-  }
-});
 
-
-//FORM to register
+//♦︎♦︎♦︎♦︎FORM to register♦︎♦︎♦︎♦︎
+////////////////////////////////
 app.get("/register", (req, res) => {
   let id = req.session.user_id;
   let user = users[id];
@@ -116,10 +116,31 @@ app.get("/register", (req, res) => {
 });
 
 
-//page that DISPLAYS the long and short URL including a hyperlink [if and only if you own that shortURL]
+
+//♦︎♦︎♦︎♦︎FORM for creating new tiny URL♦︎♦︎♦︎♦︎
+//////////////////////////////////////////////////////
+app.get('/urls/new', (req, res) => {
+  let id = req.session.user_id;
+  if (id) {
+    let user = users[id];
+    let templateVars = { user };
+    res.render("urls_new", templateVars);
+  } else {
+    //you cannot create a shortURL if you are not logged in
+    let templateVars = {user:'', notLoggedInError: true };
+    res.render('_login', templateVars);
+  }
+});
+
+
+
+//♦︎♦︎♦︎♦︎shortURL PAGE \ longURL EDIT form \ hyperlink♦︎♦︎♦︎♦︎
+///////////////////////////////////////////////
 app.get('/urls/:shortURL', (req, res) => {
   let id = req.session.user_id;
+  let urls = findUserUrls(id);
   let shortURL = req.params.shortURL;
+  //checks if you are logged in & have access
   if (id) {
     let user = users[id];
     let userObj = findUserUrls(id);
@@ -131,49 +152,76 @@ app.get('/urls/:shortURL', (req, res) => {
         return;
       }
     }
-    let templateVars = {user, authourizationError: true, notLoggedInError: false };
-    res.render('_login', templateVars);
+    //if you don't own the shortURL, sent to /urls with message
+    let templateVars = {urls, user, authourizationError: true};
+    res.render('urls_index', templateVars);
+
   } else {
-    // let errors = {authourizationError: false, notLoggedInError: true};
-    res.redirect(400, '/login');
+    //if you are not logged in, sent to /login with message
+    let templateVars = {user:'', notLoggedInError: true };
+    res.render('_login', templateVars);
   }  
 });
 
-//HYPERLINK when hyperlink is clicked, redirects to actual longURL page
+
+
+//♦︎♦︎♦︎♦︎LINK when clicked, redirects to actual longURL page♦︎♦︎♦︎♦︎
+//////////////////////////////////////////////////////////////////////
 app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
+  //checks database for that shortURL, if it exists it redirects
   if (urlDatabase.hasOwnProperty(shortURL)) {
     const longURL = urlDatabase[shortURL].longURL;
     res.redirect(longURL);
   } else {
-    res.status(403).send('Sorry, we can\'t seem to find what you are looking for....');
+    //sends error and message
+    res.status(404).send('Sorry that link does not appear to exist....')
   }
-});
+}); 
 
-//INDEX - page with all of our current urls
+
+
+//♦︎♦︎♦︎♦︎INDEX page with all of the users current urls (if any)♦︎♦︎♦︎♦︎
+////////////////////////////////////////////
 app.get('/urls', (req, res) => {
   let id = req.session.user_id;
   let urls = findUserUrls(id);
   let user = users[id];
-  let templateVars = { urls, user};
+  let templateVars = { urls, user, authourizationError: false};
   res.render('urls_index', templateVars);
 });
 
-//ROOT page - just says hello
+
+
+//♦︎♦︎♦︎♦︎ROOT page♦︎♦︎♦︎♦︎
+///////////////////////////////
 app.get('/', (req, res) => {
-  res.send('Hello!');
+  let id = req.session.user_id;
+  console.log(id)
+  if (id) {
+    //if you are logged in, it sends you to /urls
+    res.redirect('/urls');
+  } else {
+    //othwerise to login page
+    res.redirect('/login');
+  }
 });
 
 
 
-//POSTS
 
 
 
-//DELETE url from urlDatabase
+//••••••••••••••••••••••••••••••••••••••••••••••POSTS••••••••••••••••••••••••••••••••••••••••••••••••
+
+
+
+//♦︎♦︎♦︎♦︎DELETES shortURL from urlDatabase♦︎♦︎♦︎♦︎
+////////////////////////////////////////////////////////
 app.post('/urls/:shortURL/delete', (req, res) => {
   let id = req.session.user_id;
   let shortURL = req.params.shortURL;
+  //checks if you own the shortURL before it is deleted 
   if (id) {
     let userObj = findUserUrls(id);
     for (let key in userObj) {
@@ -186,7 +234,9 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 
 
-//UPDATE a longURL [if the shortURL is yours]
+
+//♦︎♦︎♦︎♦︎UPDATE a longURL [if the shortURL is yours and you are logged in]♦︎♦︎♦︎♦︎
+//////////////////////////////////////////////////////////
 app.post('/urls/:shortURL', (req, res) => {
   let id = req.session.user_id;
   let shortURL = req.params.shortURL;
@@ -202,27 +252,35 @@ app.post('/urls/:shortURL', (req, res) => {
         return;
       }
     }
-    res.redirect(400, '/login');
+    //error because you do not own that URL
+    res.status(404).send('Authorization failed');
   } else {
-      res.redirect(400, '/login');
+    //error because you are not logged in
+    res.status(404).send('Authorization failed: please login');
   }
 });
 
 
 
-//CREATE a new user
+//♦︎♦︎♦︎♦︎CREATES a new user♦︎♦︎♦︎♦︎
+//////////////////////////////////////////////////////////////////
 app.post('/register', (req, res) => {
+  //generates a string to be used as a user ID
   let idValue = generateRandomString();
   let userEmail = req.body.email;
   let userPassword = req.body.password;
   const hashedPassword = bcrypt.hashSync(userPassword, 10);
+  //checks that email & password are not emppty
   if (userPassword.length === 0 || userEmail.length === 0) {
     res.status(400).send("Status Code 404: Incorrect email or password format");
   }
+  //checks that the email is not yet used
   let searchResult  = findEmail(users, userEmail);
+  //email found, send error
   if (searchResult) {
     res.status(400).send("Status Code 404: Sorry that email is already in use");
   } else {
+  //otherwise adds new user into users object with hashed password
     users[idValue] = {id: idValue, email: userEmail, password: hashedPassword};
     req.session.user_id = idValue;
     res.redirect("/urls");
@@ -230,31 +288,46 @@ app.post('/register', (req, res) => {
 });
 
 
-//LOGIN
+
+//♦︎♦︎♦︎♦︎LOGIN♦︎♦︎♦︎♦︎
+//////////////////////////////////////////////////
 app.post('/login', (req, res) => {
   let userEmail = req.body.email;
   let userPassword = req.body.password;
+  //searches users database for the email and if found returns that user object 
   let userObject  = findEmail(users, userEmail);
   if (userObject) {
+  //bcrypt checks that the passwords match
     if (bcrypt.compareSync(userPassword, userObject.password)) {
+      //if they match, cookie created & redirect to /urls
       let id = userObject.id;
       req.session.user_id = id;
       res.redirect("/urls");
     } else  {
+      //passwords don't match, sends error
       res.status(403).send("Incorrect password");
     }
   } else {
+    //email not found
     res.status(403).send("Sorry that email does not exist. ");
   }
 });
 
-//LOGOUT
+
+
+//♦︎♦︎♦︎♦︎LOGOUT♦︎♦︎♦︎♦︎
+//////////////////////////////////////////
 app.post('/logout', (req, res) => {
+  //ends cookie session
   req.session = null;
   res.redirect("/urls");
 });
 
-//CREATE tiny URL
+
+
+
+//♦︎♦︎♦︎♦︎CREATES tiny URL♦︎♦︎♦︎♦︎
+/////////////////////////////////////////////////////
 app.post('/urls', (req, res) => {
   let id = req.session.user_id;
   let shortURL = generateRandomString();
