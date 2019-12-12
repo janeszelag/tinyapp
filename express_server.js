@@ -58,6 +58,20 @@ const findEmail = function(obj, emailToSearch) {
 
 
 
+//Searches for email in users object
+const findUserUrls = function(id) {
+  let newObj = {};
+  for (let key in urlDatabase) {
+      if (urlDatabase[key].userID === id) {
+        newObj[key] = urlDatabase[key];
+      }
+    }
+  return newObj;
+};
+
+
+
+
 //Server is listening
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
@@ -75,6 +89,7 @@ app.get('/login', (req, res) => {
   res.render("_login", templateVars);
 });
 
+
 //FORM for creating new tiny URL
 app.get('/urls/new', (req, res) => {
   let id = req.cookies['user_id'];
@@ -87,6 +102,7 @@ app.get('/urls/new', (req, res) => {
   }
 });
 
+
 //FORM to register
 app.get("/register", (req, res) => {
   let id = req.cookies['user_id'];
@@ -96,27 +112,45 @@ app.get("/register", (req, res) => {
 });
 
 
-//page that DISPLAYS the long and short URL including a hyperlink
+//page that DISPLAYS the long and short URL including a hyperlink [if and only if you own that shortURL]
 app.get('/urls/:shortURL', (req, res) => {
   let id = req.cookies['user_id'];
-  let user = users[id];
   let shortURL = req.params.shortURL;
-  let templateVars = { shortURL, longURL: urlDatabase[shortURL].longURL, user};
-  res.render('urls_show', templateVars);
+  if (id) {
+    let userObj = findUserUrls(id);
+    for (let key in userObj) {
+      if (shortURL === key) {
+        let user = users[id];
+        let templateVars = { shortURL, longURL: urlDatabase[shortURL].longURL, user};
+        res.render('urls_show', templateVars);
+        return;
+      }
+    }
+    res.redirect('/login');
+  } else {
+    res.redirect('/login');
+  }
+  
 });
 
 //HYPERLINK when hyperlink is clicked, redirects to actual longURL page
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL);
+  let shortURL = req.params.shortURL
+  if (urlDatabase.hasOwnProperty(shortURL)) {
+    const longURL = urlDatabase[shortURL].longURL;
+    res.redirect(longURL);
+  } else {
+    res.status(403).send('Sorry, we can\'t seem to find what you are looking for....')
+  }
 });
 
 //INDEX - page with all of our current urls
-app.get("/urls", (req, res) => {
+app.get('/urls', (req, res) => {
   let id = req.cookies['user_id'];
+  let urls = findUserUrls(id);
   let user = users[id];
-  let templateVars = { urls: urlDatabase, user};
-  res.render("urls_index", templateVars);
+  let templateVars = { urls, user};
+  res.render('urls_index', templateVars);
 });
 
 //ROOT page - just says hello
@@ -132,17 +166,40 @@ app.get('/', (req, res) => {
 
 //DELETE url from urlDatabase
 app.post('/urls/:shortURL/delete', (req, res) => {
-  let value = req.params.shortURL;
-  delete urlDatabase[value];
-  res.redirect("/urls");
+  let id = req.cookies['user_id'];
+  let shortURL = req.params.shortURL;
+  if (id) {
+    let userObj = findUserUrls(id);
+    for (let key in userObj) {
+      if (shortURL === key) {
+        delete urlDatabase[shortURL];
+        res.redirect("/urls");
+      }
+    }
+  }
 });
 
 
-//UPDATE longURL
+//UPDATE a longURL [if the shortURL is yours]
 app.post('/urls/:shortURL', (req, res) => {
-  let value2 = req.params.shortURL;
-  urlDatabase[value2] = req.body.longURL;
-  res.redirect("/urls");
+  let id = req.cookies['user_id'];
+  let shortURL = req.params.shortURL;
+  let newLongURL = req.body.longURL
+  if (id) {
+    let userObj = findUserUrls(id);
+    for (let key in userObj) {
+      if (shortURL === key) {
+        let user = users[id];
+        urlDatabase[shortURL].longURL = newLongURL;
+        let templateVars = { shortURL, longURL: urlDatabase[shortURL].longURL, user};
+        res.render('urls_show', templateVars);
+        return;
+      }
+    }
+    res.redirect('/login');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 //CREATE a new user
@@ -191,6 +248,7 @@ app.post('/logout', (req, res) => {
 app.post('/urls', (req, res) => {
   let id = req.cookies['user_id'];
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: id}
+  let longURL = req.body.longURL
+  urlDatabase[shortURL] = { longURL, userID: id}
   res.redirect(`/urls/${shortURL}`)
 });
