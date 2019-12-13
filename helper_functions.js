@@ -14,7 +14,7 @@ const generateRandomString = function() {
 };
 
 
-//Searches for email in users object
+//Searches for an email in users object
 const findEmail = function(database, emailToSearch) {
   for (let user in database) {
     if (database[user].email === emailToSearch) {
@@ -25,7 +25,7 @@ const findEmail = function(database, emailToSearch) {
 };
 
 
-//Searches for email in users object
+//Searches for urls belonging to a user
 const findUserUrls = function(database, user) {
   let urlsObj = {};
   for (let URL in database) {

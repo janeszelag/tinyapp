@@ -38,10 +38,10 @@
             <td><%= url %></td>
             <td><%= urls[url].longURL %></td>
             <td> 
-              <button class="btn btn-primary" onclick="window.location.href = '/urls/<%= url %>'">Edit</button></td>
+              <button class="btn btn-warning" style="width: 3cm" onclick="window.location.href = '/urls/<%= url %>'">Edit</button></td>
             <td>
               <form method="POST" action="/urls/<%= url %>/delete?_method=DELETE">
-                <button type="submit" class="btn btn-danger">Delete</button>
+                <button type="submit" style="width: 3cm" class="btn btn-danger">Delete</button>
               </form>
             </td>
           </tr>
@@ -50,7 +50,7 @@
     </table>
     <% if (Object.keys(urls).length === 0)  { %>
       <div class="alert alert-success" role="alert">
-        Click 'Create a New URL' to get started!
+        Click 'Create New URL' to get started!
       </div>
     <% } %>
   </main>

@@ -16,22 +16,24 @@
     <% if (incorrectPasswordError) { %>
       <div class="alert alert-warning" role="alert">
         <p>
-          Sorry incorrect emaail or password format. Please try again.
+          Sorry, incorrect emaail or password format. Please try again.
         </p>
       </div>
     <% } %>
     <% if (emailError) { %>
       <div class="alert alert-warning" role="alert">
         <p>
-          Sorry that email appears to be already linked to an account. Please try again.
+          Sorry, that email appears to be already linked to an account. Please try again.
         </p>
       </div>
     <% } %>
   <main style="margin: 1em;">
     <form method="POST" action="/register">
-      <label>Enter email to register:</label><input class="form-control" type="email" name="email" placeholder="example@email.com" style="width: 300px; margin: 1em">
-      <label>Enter password:</label><input class="form-control" type="password" name="password" style="width: 300px; margin: 1em">
-      <button type="submit" class="btn btn-primary">Submit</button>
+      <label style="margin: 0cm 1em" >Enter email to register:</label>
+      <input class="form-control" type="email" name="email" placeholder="example@email.com" style="width: 300px; margin: 1em">
+      <label style="margin: 0cm 1em" >Enter password:</label>
+      <input class="form-control" type="password" name="password" style="width: 300px; margin: 1em">
+      <button type="submit" style="width: 4.5cm; margin: 0cm 1em" class="btn btn-info">Register</button>
     </form>
   </main>
   <!-- Bootstrap JS -->

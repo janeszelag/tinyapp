@@ -4,17 +4,17 @@
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="navbar-nav collapse navbar-collapse w-100" id="navbarNavAltMarkup">
-      <a class="nav-item nav-link" href="/urls">My URLs</a>
-      <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+    <div class="navbar-nav collapse navbar-collapse w-100; margin: 1em" id="navbarSupportedContent">
+      <a class="nav-item nav-link" style="margin: 0cm 1em"  href="/urls">My URLs</a>
+      <a class="nav-item nav-link" style="margin: 0cm 1em" href="/urls/new">Create New URL</a>
       <% if (user) { %>
-        <span class="nav-item navbar-text"><%= user.email %></span>
+        <span class="navbar-text" style="margin: 0cm 1em"  ><%= user.email %></span>
         <form class="ml-auto form-inline" action="/logout" method="POST">
-          <button type="submit" class="btn btn-primary">Log Out</button>
+          <button type="submit" style="width: 4cm" class="btn btn-info">Log Out</button>
         </form>
       <% } else { %>
-        <a class="nav-item nav-link" href="/login">Click here to login</a>
-        <a class="nav-item nav-link" href="/register">Click here to register</a>
+        <a class="nav-item nav-link" style="margin: 0cm 1em" href="/login">Click here to login</a>
+        <a class="nav-item nav-link" style="margin: 0cm 1em" href="/register">Click here to register</a>
       <% } %>
     </div>
   </nav>

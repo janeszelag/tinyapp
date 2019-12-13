@@ -61,35 +61,6 @@ const users = {
 
 
 
-//♦︎♦︎♦︎♦︎FORM to LOGIN ♦︎♦︎♦︎♦︎
-/////////////////////////////////////////////////////
-app.get('/login', (req, res) => {
-  let id = req.session.user_id;
-  if (id) {
-    res.redirect('/urls');
-  } else {
-    let user = '';
-    let templateVars = {user, notLoggedInError: false, incorrectPasswordError: false, noEmailError: false};
-    res.render('_login', templateVars);
-  }
-});
-
-
-
-//♦︎♦︎♦︎♦︎FORM to REGISTER♦︎♦︎♦︎♦︎
-////////////////////////////////
-app.get('/register', (req, res) => {
-  let id = req.session.user_id;
-  if (id) {
-    res.redirect('/urls');
-  } else {
-    let user = '';
-    let templateVars = { user, incorrectPasswordError: false, emailError: false };
-    res.render('_register', templateVars);
-  }
-});
-
-
 
 //♦︎♦︎♦︎♦︎FORM for creating NEW shortURL♦︎♦︎♦︎♦︎
 //////////////////////////////////////////////////////
@@ -172,6 +143,36 @@ app.get('/urls', (req, res) => {
 });
 
 
+//♦︎♦︎♦︎♦︎FORM to LOGIN ♦︎♦︎♦︎♦︎
+/////////////////////////////////////////////////////
+app.get('/login', (req, res) => {
+  let id = req.session.user_id;
+  if (id) {
+    res.redirect('/urls');
+  } else {
+    let user = '';
+    let templateVars = {user, notLoggedInError: false, incorrectPasswordError: false, noEmailError: false};
+    res.render('_login', templateVars);
+  }
+});
+
+
+
+//♦︎♦︎♦︎♦︎FORM to REGISTER♦︎♦︎♦︎♦︎
+////////////////////////////////
+app.get('/register', (req, res) => {
+  let id = req.session.user_id;
+  if (id) {
+    res.redirect('/urls');
+  } else {
+    let user = '';
+    let templateVars = { user, incorrectPasswordError: false, emailError: false };
+    res.render('_register', templateVars);
+  }
+});
+
+
+
 
 //♦︎♦︎♦︎♦︎ROOT page♦︎♦︎♦︎♦︎
 ///////////////////////////////
@@ -185,7 +186,6 @@ app.get('/', (req, res) => {
     res.redirect('/login');
   }
 });
-
 
 
 
