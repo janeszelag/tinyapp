@@ -23,10 +23,6 @@ app.use(methodOverride('_method'));
 
 
 
-//♦︎♦︎♦︎♦︎Server is listening♦︎♦︎♦︎♦︎
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
 
 
 
@@ -340,4 +336,10 @@ app.post('/urls', (req, res) => {
   let longURL = req.body.longURL;
   urlDatabase[shortURL] = { longURL, userID: id};
   res.redirect(`/urls/${shortURL}`);
+});
+
+
+//♦︎♦︎♦︎♦︎Server is listening♦︎♦︎♦︎♦︎
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
