@@ -209,12 +209,12 @@ app.delete('/urls/:shortURL/delete', (req, res) => {
         delete urlDatabase[shortURL];
         res.redirect('/urls');
         return;
-      } else {
-        //if you don't own you get error
-        res.status(403).send('Status Code 403: Not authourized.');
-        return;
       }
     }
+     //if you don't own you get error
+    res.status(403).send('Status Code 403: Not authourized.');
+    return;
+  
   } else {
     //if you aren't logged in, get error
     res.status(403).send('Status Code 403: Not authourized.');
